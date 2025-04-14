@@ -2,13 +2,18 @@ package main
 
 import (
 	"time"
+	"ymir/api/controllers"
+	"ymir/api/db"
+	"ymir/api/middleware"
 
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
-
+	db.LoadEnvVariables()
+	db.ConnectToDb()
+	db.SyncDatabase()
 }
 
 func corsConfig() cors.Config {
@@ -27,14 +32,12 @@ func main() {
 	r := gin.Default()
 	r.Use(cors.New(corsConfig()))
 
-	//api := r.Group("/")
-	//api.Use(middleware.RequireAuth)
+	r.POST("auth/login", controllers.Login)
 
-	//r.POST("auth/register", controllers.Register)
-	//r.POST("auth/login", controllers.Login)
-	//r.POST("auth/verify", controllers.Verify)
+	api := r.Group("/")
+	api.Use(middleware.RequireAuth)
 
-	//api.GET("auth/validate", middleware.RequireAuth, controllers.Validate)
+	api.GET("auth/validate", middleware.RequireAuth, controllers.Validate)
 
 	r.Run()
 }
