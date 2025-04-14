@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/brianvoe/gofakeit/v7"
 )
@@ -86,16 +87,11 @@ func TestAuthenticatedWithValidTokenAndUserFound(t *testing.T) {
 
 	token, _ := utils.GenerateToken(user)
 
-	print(user.ID)
-
 	req, _ := http.NewRequest("GET", "/auth/validate", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp := httptest.NewRecorder()
 
 	router.ServeHTTP(resp, req)
-
-	print(resp.Body.String())
-	print(resp.Code)
 
 	assert.Equal(t, http.StatusOK, resp.Code)
 
@@ -108,7 +104,10 @@ func TestFullAuthentificationFlowWithCookie(t *testing.T) {
 	router.POST("/auth/login", controllers.Login)
 	router.GET("/auth/validate", middleware.RequireAuth, controllers.Validate)
 
-	user := models.User{Email: gofakeit.Email(), Username: gofakeit.Username(), Password: gofakeit.Password(true, true, true, true, false, 14)}
+	password := gofakeit.Password(true, true, true, true, false, 14)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+
+	user := models.User{Email: gofakeit.Email(), Username: gofakeit.Username(), Password: string(hash)}
 
 	db.DB.Create(&user)
 
@@ -116,7 +115,7 @@ func TestFullAuthentificationFlowWithCookie(t *testing.T) {
 		LOGIN
 	*/
 
-	loginRequest := models.LoginRequest{Username: user.Username, Password: user.Password}
+	loginRequest := models.LoginRequest{Username: user.Username, Password: password}
 	jsonValue, _ := json.Marshal(loginRequest)
 
 	// Login user
