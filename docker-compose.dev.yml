@@ -1,0 +1,22 @@
+services:
+  caddy:
+    volumes:
+      - ./tools/docker/caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - front
+
+  api:
+    image: cosmtrek/air
+    working_dir: /go/src/app
+    command: air
+    volumes:
+      - ./api:/go/src/app
+
+  front:
+    build:
+      context: ./tools/docker/node
+    working_dir: /usr/src/app
+    command: pnpm run dev
+    volumes:
+      - ./front:/usr/src/app

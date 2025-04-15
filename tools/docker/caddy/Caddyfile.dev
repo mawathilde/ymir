@@ -1,0 +1,17 @@
+:80 {
+    encode gzip
+
+    redir /api /api/
+
+    handle_path /api/* {
+        reverse_proxy api:8080
+    }
+
+    handle {
+        reverse_proxy front:8000
+    }
+
+    log {
+        output file /var/log/caddy/access.log
+    }
+}

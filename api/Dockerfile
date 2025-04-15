@@ -1,20 +1,25 @@
-# syntax=docker/dockerfile:1
-
-FROM golang:1.24.2-alpine
+# Build stage
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-ENV CGO_ENABLED=0
-
-COPY go.* .
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-# Build
-RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /ymir-api
+RUN go build -o main ./main.go
+
+# Run stage
+FROM alpine:latest
+
+RUN adduser -D ymir
+USER ymir
+
+WORKDIR /home/ymir
+
+COPY --from=builder /app/main .
 
 EXPOSE 8080
 
-# Run
-CMD ["/ymir-api"]
+CMD ["./main"]

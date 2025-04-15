@@ -1,0 +1,10 @@
+services:
+  caddy:
+    volumes:
+      - ./tools/docker/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - ./front/dist:/usr/share/caddy
+
+  api:
+    build: ./api
+    environment:
+      - NODE_ENV=production
